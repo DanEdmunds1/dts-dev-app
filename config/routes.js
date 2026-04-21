@@ -2,7 +2,8 @@ import express from 'express'
 
 import {
     getAllTasks,
-    getSingleTask
+    getSingleTask,
+    createTask
 } from '../controllers/tasks.js'
 
 
@@ -10,6 +11,7 @@ const router = express.Router()
 
 router.route('/tasks')
   .get(getAllTasks)
+  .post(createTask)
 
 router.route('/tasks/:taskId')
   .get(getSingleTask)

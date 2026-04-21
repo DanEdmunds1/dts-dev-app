@@ -3,8 +3,9 @@ import { createBrowserRouter, RouterProvider, type RouteObject } from "react-rou
 import App from "./App";
 import './index.css';
 
-// Cmponents
+// Components
 import Home from "./components/Home";
+import CreateTask from "./components/CreateTask";
 
 const routes: RouteObject[] = [
   {
@@ -14,6 +15,10 @@ const routes: RouteObject[] = [
       {
         index: true,
         element: <Home />
+      },
+      {
+        path: "create-task",
+        element: <CreateTask />
       }
     ]
   }
