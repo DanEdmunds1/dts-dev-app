@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { activeUser, getToken } from '../utils/helpers/common'
 
 export default function CreateTask() {
     const [title, setTitle] = useState('')
@@ -8,13 +9,46 @@ export default function CreateTask() {
     const [dueDateTime, setDueDateTime] = useState('')
     const [message, setMessage] = useState('')
 
-    const handleSubmit = async (e) => {
+    const userId = activeUser()
+
+
+
+
+    function checkToken() {
+        console.log(userId)
+        if (userId) {
+            const token = getToken()
+            const b64 = token?.split('.')[1]
+            const payload = JSON.parse(atob(b64 || ""))
+
+            const now = Date.now() / 1000
+            const exp = payload.exp
+
+            if (exp > now) {
+                console.log('All good')
+            } else {
+
+            }
+        } else {
+            console.log('No active user')
+
+        }
+    }
+
+    const handleSubmit = async (e: any) => {
         e.preventDefault()
+        checkToken()
         try {
+            if (!userId) {
+                setMessage('You must be logged in to create a task.')
+                return
+            }
+
             const response = await fetch('http://localhost:3000/api/tasks', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${getToken()}`
                 },
                 body: JSON.stringify({
                     title,
@@ -23,6 +57,7 @@ export default function CreateTask() {
                     dueDateTime: new Date(dueDateTime).toISOString()
                 })
             })
+
             if (response.ok) {
                 setMessage('Task created successfully!')
                 setTitle('')
@@ -39,76 +74,102 @@ export default function CreateTask() {
     }
 
     return (
-        <>
-            <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
-                <div className="flex justify-between items-center mb-6">
-                    <h1 className="text-2xl font-bold">Create New Task</h1>
-                    <Link to="/" className="text-blue-500 hover:text-blue-700">
-                        Back
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 py-8">
+            <div className="max-w-2xl mx-auto">
+                {/* Header */}
+                <div className="flex justify-between items-center mb-8">
+                    <h1 className="text-4xl font-bold text-gray-800">Create New Task</h1>
+                    <Link to="/" className="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold transition duration-200">
+                        ← Back
                     </Link>
                 </div>
-                <form onSubmit={handleSubmit}>
-                    <div className="mb-4">
-                        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="title">
-                            Title
-                        </label>
-                        <input
-                            type="text"
-                            id="title"
-                            value={title}
-                            onChange={(e) => setTitle(e.target.value)}
-                            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                            required
-                        />
-                    </div>
-                    <div className="mb-4">
-                        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="description">
-                            Description
-                        </label>
-                        <textarea
-                            id="description"
-                            value={description}
-                            onChange={(e) => setDescription(e.target.value)}
-                            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                        />
-                    </div>
-                    <div className="mb-4">
-                        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="status">
-                            Status
-                        </label>
-                        <select
-                            id="status"
-                            value={status}
-                            onChange={(e) => setStatus(e.target.value)}
-                            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+
+                {/* Form Container */}
+                <div className="bg-white rounded-2xl shadow-xl p-8">
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        {/* Title Input */}
+                        <div>
+                            <label className="block text-gray-700 text-sm font-semibold mb-3" htmlFor="title">
+                                📝 Task Title
+                            </label>
+                            <input
+                                type="text"
+                                id="title"
+                                value={title}
+                                onChange={(e) => setTitle(e.target.value)}
+                                placeholder="Enter task title..."
+                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg text-gray-700 focus:border-blue-500 focus:outline-none transition duration-200 placeholder-gray-400"
+                                required
+                            />
+                        </div>
+
+                        {/* Description Input */}
+                        <div>
+                            <label className="block text-gray-700 text-sm font-semibold mb-3" htmlFor="description">
+                                📄 Description
+                            </label>
+                            <textarea
+                                id="description"
+                                value={description}
+                                onChange={(e) => setDescription(e.target.value)}
+                                placeholder="Add more details about your task..."
+                                rows={4}
+                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg text-gray-700 focus:border-blue-500 focus:outline-none transition duration-200 placeholder-gray-400 resize-vertical"
+                            />
+                        </div>
+
+                        {/* Status Input */}
+                        <div>
+                            <label className="block text-gray-700 text-sm font-semibold mb-3" htmlFor="status">
+                                🎯 Status
+                            </label>
+                            <select
+                                id="status"
+                                value={status}
+                                onChange={(e) => setStatus(e.target.value)}
+                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg text-gray-700 focus:border-blue-500 focus:outline-none transition duration-200 cursor-pointer bg-white"
+                            >
+                                <option value="pending">⏳ Pending</option>
+                                <option value="in-progress">🚀 In Progress</option>
+                                <option value="completed">✅ Completed</option>
+                            </select>
+                        </div>
+
+                        {/* Due Date Input */}
+                        <div>
+                            <label className="block text-gray-700 text-sm font-semibold mb-3" htmlFor="dueDateTime">
+                                ⏰ Due Date & Time
+                            </label>
+                            <input
+                                type="datetime-local"
+                                id="dueDateTime"
+                                value={dueDateTime}
+                                onChange={(e) => setDueDateTime(e.target.value)}
+                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg text-gray-700 focus:border-blue-500 focus:outline-none transition duration-200"
+                                required
+                            />
+                        </div>
+
+                        {/* Submit Button */}
+                        <button
+                            type="submit"
+                            className="w-full bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 ease-in-out transform hover:scale-105 shadow-md hover:shadow-lg mt-8"
                         >
-                            <option value="pending">Pending</option>
-                            <option value="in-progress">In Progress</option>
-                            <option value="completed">Completed</option>
-                        </select>
-                    </div>
-                    <div className="mb-4">
-                        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="dueDateTime">
-                            Due Date & Time
-                        </label>
-                        <input
-                            type="datetime-local"
-                            id="dueDateTime"
-                            value={dueDateTime}
-                            onChange={(e) => setDueDateTime(e.target.value)}
-                            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                            required
-                        />
-                    </div>
-                    <button
-                        type="submit"
-                        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-                    >
-                        Create Task
-                    </button>
-                </form>
-                {message && <p className="mt-4 text-center text-green-600">{message}</p>}
+                            ✨ Create Task
+                        </button>
+                    </form>
+
+                    {/* Message Display */}
+                    {message && (
+                        <div className={`mt-6 p-4 rounded-lg font-semibold text-center ${message.includes('successfully')
+                            ? 'bg-green-100 text-green-700 border-2 border-green-300'
+                            : 'bg-red-100 text-red-700 border-2 border-red-300'
+                            }`}>
+                            {message}
+                        </div>
+                    )}
+                </div>
             </div>
-        </>
+        </div>
     )
 }

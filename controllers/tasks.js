@@ -22,11 +22,25 @@ export const getSingleTask = async (req, res) => {
 
 export const createTask = async (req, res) => {
   try {
+    console.log("CREATE TASK HIT")
+    console.log("REQ.CURRENTUSER:", req.currentUser)
+
     const { title, description, status, dueDateTime } = req.body
-    const newTask = await Task.create({ title, description, status, dueDateTime })
+    const owner = req.currentUser?._id
+
+    const newTask = await Task.create({
+      title,
+      description,
+      status,
+      dueDateTime,
+      owner
+    })
+
     return res.status(201).json(newTask)
   } catch (error) {
     console.log(error)
     return res.status(400).json(error)
   }
 }
+
+

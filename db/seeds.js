@@ -1,5 +1,8 @@
 import task from '../models/task.js'
+import User from '../models/user.js'
+
 import taskData from './data/tasks.js'
+import userData from './data/users.js'
 
 import mongoose from 'mongoose'
 import 'dotenv/config'
@@ -18,11 +21,23 @@ async function seed() {
         const { deletedCount: deletedTaskCount } = await task.deleteMany()
         console.log(`Deleted ${deletedTaskCount} tasks from the database`)
 
+        const { deletedCount: deletedUserCount } = await User.deleteMany()
+        console.log(`Deleted ${deletedUserCount} users from the database`)
+
         // Seed new data
-        const tasksCreated = await task.create(taskData)
+        const usersCreated = await User.create(userData)
+        console.log(`Seeded ${usersCreated.length} users to the database`)
+
+        const ownedTasks = taskData.map(task => {
+            return { ...task, owner: usersCreated[0]._id }
+        })
+
+        const tasksCreated = await task.create(ownedTasks)
         console.log(`Seeded ${tasksCreated.length} tasks to the database`)
 
         console.log(tasksCreated)
+        console.log(usersCreated)
+        console.log(ownedTasks)
 
         // Close connection to the database
         await mongoose.connection.close()

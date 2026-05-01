@@ -6,6 +6,10 @@ import './index.css';
 // Components
 import Home from "./components/Home";
 import CreateTask from "./components/CreateTask";
+import Login from "./components/Login";
+
+// Actions
+import { loginAction } from "./utils/helpers/actions";
 
 const routes: RouteObject[] = [
   {
@@ -19,6 +23,11 @@ const routes: RouteObject[] = [
       {
         path: "create-task",
         element: <CreateTask />
+      },
+      {
+        path: "login",
+        element: <Login />,
+        action: loginAction
       }
     ]
   }
