@@ -1,11 +1,17 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { type Task } from '../types/Task'
+import { activeUser } from '../utils/helpers/common'
+import { deleteTask } from '../utils/actions/task'
 
 export default function Home() {
     const [tasks, setTasks] = useState<Task[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+    const [openMenuId, setOpenMenuId] = useState<string | null>(null)
+
+    const userId = activeUser()
+    const user = userId
 
     useEffect(() => {
         const fetchTasks = async () => {
@@ -43,6 +49,20 @@ export default function Home() {
         }
     }
 
+    const handleDeleteTask = async (taskId: string) => {
+        if (!confirm('Are you sure you want to delete this task?')) return
+        
+        try {
+            const response = await deleteTask(taskId)
+            if (response.status !== 204 && response.status !== 200) throw new Error('Failed to delete task')
+            setTasks(tasks.filter(t => t._id !== taskId))
+            setOpenMenuId(null)
+        } catch (err: any) {
+            console.error('Error deleting task:', err)
+            alert('Failed to delete task')
+        }
+    }
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 py-8">
             <div className="max-w-6xl mx-auto">
@@ -50,7 +70,7 @@ export default function Home() {
                 <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-8">
                     <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-8 text-center text-white">
                         <h1 className="text-5xl font-bold mb-2">Task Manager</h1>
-                        <p className="text-blue-100">Stay organized and productive</p>
+                        <p className="text-blue-100">Welcome {user}</p>
                     </div>
                     <div className="p-8 text-center">
                         <p className="text-gray-600 mb-8 text-lg leading-relaxed">
@@ -97,26 +117,65 @@ export default function Home() {
 
                     {!loading && tasks.length > 0 && (
                         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                            {tasks.map((task) => (
-                                <div key={task._id} className="border-2 border-gray-200 rounded-lg p-4 hover:shadow-lg transition duration-200">
-                                    <div className="flex justify-between items-start mb-3">
-                                        <h3 className="text-lg font-bold text-gray-800 flex-1">{task.title}</h3>
-                                        <span className={`px-3 py-1 rounded-full text-sm font-semibold ml-2 whitespace-nowrap ${getStatusColor(task.status)}`}>
-                                            {getStatusEmoji(task.status)} {task.status}
-                                        </span>
-                                    </div>
-                                    
-                                    {task.description && (
-                                        <p className="text-gray-600 text-sm mb-3 line-clamp-2">{task.description}</p>
-                                    )}
-                                    
-                                    {task.dueDateTime && (
-                                        <div className="text-xs text-gray-500">
-                                            ⏰ Due: {new Date(task.dueDateTime).toLocaleDateString()} {new Date(task.dueDateTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                            {tasks.map((task) => {
+                                const isOwnedByCurrentUser = task.owner === userId
+                                return (
+                                    <div key={task._id} className={`border-2 rounded-lg p-4 hover:shadow-lg transition duration-200 relative ${isOwnedByCurrentUser ? 'border-blue-400 bg-blue-50' : 'border-gray-200 bg-gray-50'}`}>
+                                        <div className="flex justify-between items-start mb-3">
+                                            <h3 className="text-lg font-bold text-gray-800 flex-1">{task.title}</h3>
+                                            <div className="flex items-center gap-2">
+                                                <span className={`px-3 py-1 rounded-full text-sm font-semibold whitespace-nowrap ${getStatusColor(task.status)}`}>
+                                                    {getStatusEmoji(task.status)} {task.status}
+                                                </span>
+                                                {isOwnedByCurrentUser && (
+                                                    <div className="relative">
+                                                        <button
+                                                            onClick={() => setOpenMenuId(openMenuId === task._id ? null : task._id)}
+                                                            className="p-2 hover:bg-blue-200 rounded-full transition"
+                                                            title="More options"
+                                                        >
+                                                            ⋮
+                                                        </button>
+                                                        {openMenuId === task._id && (
+                                                            <div className="absolute right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-10">
+                                                                <Link
+                                                                    to={`/edit-task/${task._id}`}
+                                                                    className="block px-4 py-2 text-gray-700 hover:bg-gray-100 text-sm"
+                                                                    onClick={() => setOpenMenuId(null)}
+                                                                >
+                                                                    ✏️ Edit
+                                                                </Link>
+                                                                <button
+                                                                    onClick={() => handleDeleteTask(task._id)}
+                                                                    className="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 text-sm border-t border-gray-200"
+                                                                >
+                                                                    🗑️ Delete
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
-                                    )}
-                                </div>
-                            ))}
+                                        
+                                        {task.description && (
+                                            <p className="text-gray-600 text-sm mb-3 line-clamp-2">{task.description}</p>
+                                        )}
+                                        
+                                        {task.dueDateTime && (
+                                            <div className="text-xs text-gray-500">
+                                                ⏰ Due: {new Date(task.dueDateTime).toLocaleDateString()} {new Date(task.dueDateTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                            </div>
+                                        )}
+                                        
+                                        <div className="mt-3 pt-3 border-t border-gray-200">
+                                            <span className={`text-xs font-semibold ${isOwnedByCurrentUser ? 'text-blue-600 bg-blue-100' : 'text-gray-600 bg-gray-100'} px-2 py-1 rounded`}>
+                                                {isOwnedByCurrentUser ? '👤 Your Task' : '👥 Other User\'s Task'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                )
+                            })}
                         </div>
                     )}
                 </div>

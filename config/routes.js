@@ -3,7 +3,9 @@ import express from 'express'
 import {
   getAllTasks,
   getSingleTask,
-  createTask
+  createTask,
+  updateTask,
+  deleteTask
 } from '../controllers/tasks.js'
 
 import { register, login, getProfile, updateUserImage } from '../controllers/users.js'
@@ -18,6 +20,8 @@ router.route('/tasks')
 
 router.route('/tasks/:taskId')
   .get(getSingleTask)
+  .put(secureRoute, updateTask)
+  .delete(secureRoute, deleteTask)
 
 router.route('/login')
   .post(login)

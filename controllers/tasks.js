@@ -44,3 +44,52 @@ export const createTask = async (req, res) => {
 }
 
 
+export const updateTask = async (req, res) => {
+  try {
+    const { taskId } = req.params
+      const task = await Task.findById(taskId)
+
+      if(!task) {
+        return res.status(404).json({ message: 'Task Not Found' })
+      }
+
+      if(!task.owner.equals(req.currentUser._id)) {
+          return res.status(401).json({ message: 'Unauthorized' })
+      }
+
+      Object.assign(task, req.body)
+      await task.save()
+      return res.json(task)
+  } catch (error) {
+      console.log(error)
+  }
+}
+
+export const deleteTask = async (req, res) => {
+  console.log('Hit Delete')
+
+  try {
+    const { taskId } = req.params
+
+    // Find the task first
+    const task = await Task.findById(taskId)
+
+    if (!task) {
+      return res.status(404).json({ message: "Task not found" })
+    }
+
+    // Check ownership
+    if (!task.owner.equals(req.currentUser._id)) {
+      return res.status(401).json({ message: "Unauthorized" })
+    }
+
+    // Now delete it
+    await task.deleteOne()
+
+    return res.sendStatus(204)
+
+  } catch (error) {
+    console.error(error)
+    return res.status(400).json(error)
+  }
+}

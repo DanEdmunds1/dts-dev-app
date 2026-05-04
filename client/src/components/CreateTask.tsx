@@ -1,6 +1,7 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { activeUser, getToken } from '../utils/helpers/common'
+
 
 export default function CreateTask() {
     const [title, setTitle] = useState('')
@@ -9,9 +10,16 @@ export default function CreateTask() {
     const [dueDateTime, setDueDateTime] = useState('')
     const [message, setMessage] = useState('')
 
+    const navigate = useNavigate()
+
     const userId = activeUser()
 
-
+    useEffect(() => {
+        if (!userId) {
+            window.alert('You must be logged in to create a task.')
+            navigate('/login')
+        }
+    }, [userId])
 
 
     function checkToken() {

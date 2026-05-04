@@ -16,6 +16,13 @@ export default function Login() {
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
             <div className="max-w-md w-full bg-white rounded-2xl shadow-xl overflow-hidden">
+                <button
+                    onClick={() => navigate('/')}
+                    className="absolute top-4 left-4 text-gray-500 hover:text-gray-700 transition duration-200"
+                >
+                    ← Back
+                </button>
+
                 {/* Header */}
                 <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-8 text-center text-white">
                     <h1 className="text-4xl font-bold mb-2">🔐 Welcome Back</h1>

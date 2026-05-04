@@ -1,4 +1,4 @@
-const tokenName = "THIS_IS_A_SECRET_TOKEN_NAME"
+const tokenName = import.meta.env.VITE_TOKEN_NAME || "jwt_token"
 
 // Convert FormData → object
 export async function formToObj(request: Request): Promise<Record<string, any>> {
